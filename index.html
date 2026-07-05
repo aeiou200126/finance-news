@@ -3,64 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日金融市場資訊聚合儀表板</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>每日金融市場資訊聚合</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .box { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        .loading { text-align: center; color: #666; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
-    <header class="bg-gradient-to-r from-slate-800 to-indigo-950 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-[1400px] mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-chart-line text-2xl text-cyan-400"></i>
-                <h1 class="text-xl font-bold tracking-wide">每日金融市場資訊聚合</h1>
-            </div>
-            <div class="flex flex-col sm:flex-row items-center gap-2 text-xs text-slate-300">
-                <div class="bg-slate-700/50 px-3 py-1 rounded-full">新聞更新：<span id="news-update-time">載入中...</span></div>
-                <div class="bg-slate-700/50 px-3 py-1 rounded-full">行情更新：<span id="market-update-time">載入中...</span></div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-[1400px] mx-auto px-4 py-6">
-        <div id="status-message" class="text-center py-20">
-            <div class="animate-spin text-indigo-600 text-4xl mb-4"><i class="fa-solid fa-circle-notch"></i></div>
-            <p class="text-slate-500 font-medium">正在聚合最新金融新聞、市場數據與 AI 摘要...</p>
+<body>
+    <div class="container">
+        <h1>📈 每日金融市場資訊聚合</h1>
+        
+        <div id="ai-summary-box" class="box">
+            <h2>🤖 AI 財經早報</h2>
+            <div class="loading">正在分析今日市場數據，請稍候...</div>
         </div>
 
-        <div id="main-content" class="hidden">
-            
-            <section class="mb-8 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl p-6 shadow-sm border border-indigo-100">
-                <div class="flex items-center space-x-2 mb-4">
-                    <i class="fa-solid fa-robot text-indigo-600 text-xl"></i>
-                    <h2 class="text-xl font-bold text-indigo-900 tracking-wider">AI 市場早報重點</h2>
-                </div>
-                <div id="ai-summary-content" class="prose prose-slate max-w-none text-slate-700 leading-relaxed text-sm sm:text-base">
-                    <div class="animate-pulse flex space-x-4">
-                        <div class="flex-1 space-y-4 py-1">
-                            <div class="h-4 bg-indigo-200 rounded w-3/4"></div>
-                            <div class="h-4 bg-indigo-200 rounded"></div>
-                            <div class="h-4 bg-indigo-200 rounded w-5/6"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        <div id="news-box" class="box">
+            <h2>📰 今日財經焦點</h2>
+            <div class="loading">正在抓取新聞...</div>
+        </div>
 
-            <section class="mb-8">
-                <div class="flex items-center space-x-2 mb-4">
-                    <i class="fa-solid fa-globe text-indigo-600 text-lg"></i>
-                    <h2 class="text-lg font-bold text-slate-700 tracking-wider">全球市場焦點行情</h2>
-                </div>
-                <div id="market-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4"></div>
-            </section>
+        <div id="market-box" class="box">
+            <h2>📊 市場行情</h2>
+            <div class="loading">正在讀取報價...</div>
+        </div>
+    </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                    <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 flex justify-between items-center text-white shrink-0">
-                        <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-newspaper text-lg"></i>
-                            <h2 class="font-bold text-lg tracking-wider" id="source-ed-name">經濟日報</h2>
-                        </div>
-                        <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full" id="source-ed-count">0 則</span>
-                    </div>
-                    <ul id="source-ed-list" class="divide-y divide-slate-100 overflow-y-auto flex-1 max-h-[600px]"></ul>
-                </section>
+    <script>
+        // 設定路徑為 ./ 開頭，確保在 GitHub Pages 也能抓到檔案
+        function loadData(url, elementId) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("檔案不存在");
+                    return response.json();
+                })
+                .then(data => {
+                    const container = document.getElementById(elementId);
+                    if (elementId === 'ai-summary-box') {
+                        container.innerHTML = `<h2>🤖 AI 財經早報</h2><div>${data.summary_html}</div>`;
+                    } else if (elementId === 'news-box') {
+                        let html = '<h2>📰 今日財經焦點</h2><ul>';
+                        Object.values(data.sources).forEach(src => {
+                            src.news.forEach(n => {
+                                html += `<li><a href="${n.link}" target="_blank">${n.title}</a></li>`;
+                            });
+                        });
+                        container.innerHTML = html + '</ul>';
+                    } else if (elementId === 'market-box') {
+                        container.innerHTML = `<h2>📊 市場行情</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    }
+                })
+                .catch(error => {
+                    console.error("載入失敗:", error);
+                    document.getElementById(elementId).innerHTML = `<h2>錯誤</h2><p>無法載入 ${url}，請稍後再試。</p>`;
+                });
+        }
+
+        // 啟動讀取
+        loadData('./ai_summary.json', 'ai-summary-box');
+        loadData('./news_data.json', 'news-box');
+        loadData('./market_data.json', 'market-box');
+    </script>
+</body>
+</html>
