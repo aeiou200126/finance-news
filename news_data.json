@@ -1,0 +1,173 @@
+{
+  "updated_at": "2026-07-05 18:31:18",
+  "sources": {
+    "economic_daily": {
+      "name": "經濟日報",
+      "news": [
+        {
+          "title": "18:00 台積電設廠效應失靈？今年前四月高雄「科技三雄區」房價僅橋頭撐住",
+          "link": "https://money.udn.com/money/story/5621/9608285",
+          "published": ""
+        },
+        {
+          "title": "華信航空申請停飛花蓮航線 民航局證實：檢視資料中",
+          "link": "https://money.udn.com/money/story/7307/9607744?from=edn_maintab_cate",
+          "published": ""
+        },
+        {
+          "title": "中聯問題油 檢調出手偵辦 將釐清業者是否明知有違法成分",
+          "link": "https://money.udn.com/money/story/5648/9607293?from=edn_maintab_cate",
+          "published": ""
+        },
+        {
+          "title": "18項育兒大禮包上路前哨戰 幼兒扣除額、免稅額朝野版本一次看",
+          "link": "https://money.udn.com/money/story/7307/9608273?from=edn_maintab_cate",
+          "published": ""
+        },
+        {
+          "title": "基本生活費計算 學者質疑 有「不食人間煙火」之嫌",
+          "link": "https://money.udn.com/money/story/7307/9607301?from=edn_maintab_cate",
+          "published": ""
+        },
+        {
+          "title": "AI 熱潮不墜 6月出口旺估寫連32紅 年增率為42％至49％",
+          "link": "https://money.udn.com/money/story/10869/9607308?from=edn_maintab_cate",
+          "published": ""
+        },
+        {
+          "title": "華信航空申請停飛花蓮航線 民航局證實：檢視資料中",
+          "link": "https://money.udn.com/money/story/7307/9607744?from=edn_subcatelist_cate",
+          "published": ""
+        },
+        {
+          "title": "18項育兒大禮包上路前哨戰 幼兒扣除額、免稅額朝野版本一次看",
+          "link": "https://money.udn.com/money/story/7307/9608273?from=edn_subcatelist_cate",
+          "published": ""
+        },
+        {
+          "title": "基本生活費計算 學者質疑 有「不食人間煙火」之嫌",
+          "link": "https://money.udn.com/money/story/7307/9607301?from=edn_subcatelist_cate",
+          "published": ""
+        },
+        {
+          "title": "101為美國國慶點燈 谷立言、韓國瑜、林佳龍同框",
+          "link": "https://money.udn.com/money/story/7307/9607210?from=edn_subcatelist_cate",
+          "published": ""
+        }
+      ],
+      "count": 10
+    },
+    "commercial_times": {
+      "name": "工商時報",
+      "news": [
+        {
+          "title": "颱風巴威10、11日距台最近 發布海警機會高",
+          "link": "https://www.ctee.com.tw/news/20260705700552-431401",
+          "published": ""
+        },
+        {
+          "title": "裴洛西丈夫 涉肇事逃逸",
+          "link": "https://www.ctee.com.tw/news/20260705700551-430701",
+          "published": ""
+        },
+        {
+          "title": "健康因素影響 波索納洛因獲准繼續居家監禁",
+          "link": "https://www.ctee.com.tw/news/20260705700547-430701",
+          "published": ""
+        },
+        {
+          "title": "大多倫多地區6月房屋銷售  連四月增長",
+          "link": "https://www.ctee.com.tw/news/20260705700539-430701",
+          "published": ""
+        },
+        {
+          "title": "食藥署公布257家使用問題油品下游業者 名單一次看",
+          "link": "https://www.ctee.com.tw/news/20260705700531-430104",
+          "published": ""
+        },
+        {
+          "title": "快訊》257家使用致癌油下游名單曝光 食藥署祭3大措施",
+          "link": "https://www.ctee.com.tw/news/20260705700564-431401",
+          "published": ""
+        },
+        {
+          "title": "4張千萬發票沒人領「周一就充公」 財政部急尋幸運兒",
+          "link": "https://www.ctee.com.tw/news/20260705700526-430103",
+          "published": ""
+        },
+        {
+          "title": "美中未來關係難達共識？陸學者：若華府恢復對台軍售 將不會有戰略穩定",
+          "link": "https://www.ctee.com.tw/news/20260705700555-430701",
+          "published": ""
+        },
+        {
+          "title": "7／5本周國內外財經焦點｜美國6月服務業PMI、Fed會議紀錄、大立光及南亞科法說會",
+          "link": "https://www.ctee.com.tw/news/20260705700494-430105",
+          "published": ""
+        },
+        {
+          "title": "中聯油品食安風波 衛福部明邀4大油廠會商精進措施",
+          "link": "https://www.ctee.com.tw/news/20260705700449-430104",
+          "published": ""
+        }
+      ],
+      "count": 10
+    },
+    "bloomberg": {
+      "name": "彭博 (Bloomberg)",
+      "news": [
+        {
+          "title": "OPEC+ to Ratify Planned Oil Quota Hike as Gulf Flows Resume",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/opec-agrees-in-principle-on-188k-b-d-quota-hike-delegates-say",
+          "published": "Sun, 05 Jul 2026 07:47:55 GMT"
+        },
+        {
+          "title": "BOK Warns of Risks From Single-Stock Leveraged ETFs: Yonhap",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/bok-warns-of-risks-from-single-stock-leveraged-etfs-yonhap",
+          "published": "Sun, 05 Jul 2026 06:33:33 GMT"
+        },
+        {
+          "title": "Fewer Ships Transiting Hormuz Along Oman Coast After U-Turns",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/fewer-ships-transiting-hormuz-along-oman-coast-after-u-turns",
+          "published": "Sun, 05 Jul 2026 05:24:02 GMT"
+        },
+        {
+          "title": "Modi’s Biofuel Push Comes Under Pressure as Motorists Protest",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/modi-s-biofuel-push-comes-under-pressure-as-motorists-protest",
+          "published": "Sun, 05 Jul 2026 05:20:44 GMT"
+        },
+        {
+          "title": "Ebola Crisis Exposes Congo's Fragile Health System",
+          "link": "https://www.bloomberg.com/news/videos/2026-07-05/ebola-crisis-exposes-congo-s-fragile-health-system",
+          "published": "Sun, 05 Jul 2026 05:00:25 GMT"
+        },
+        {
+          "title": "Wang Yi Says China Welcomes Stronger European Business Relations",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/wang-yi-says-china-welcomes-stronger-european-business-relations",
+          "published": "Sun, 05 Jul 2026 02:43:54 GMT"
+        },
+        {
+          "title": "NZ Pledges Trade Talks With Brazil, Europe Within Five Years",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/nz-pledges-trade-talks-with-brazil-europe-within-five-years",
+          "published": "Sun, 05 Jul 2026 02:19:34 GMT"
+        },
+        {
+          "title": "Investors Looking for Shelter From AI Storm Are Turning to India",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-05/investors-looking-for-shelter-from-ai-storm-are-turning-to-india",
+          "published": "Sun, 05 Jul 2026 02:00:00 GMT"
+        },
+        {
+          "title": "Storms Prompt Evacuations at Washington’s July 4 Festivities",
+          "link": "https://www.bloomberg.com/news/articles/2026-07-04/extreme-heat-breaks-across-eastern-us-severe-thunderstorms-to-follow",
+          "published": "Sat, 04 Jul 2026 10:14:17 GMT"
+        },
+        {
+          "title": "Bloomberg This Weekend 07/04/2026",
+          "link": "https://www.bloomberg.com/news/videos/2026-07-04/bloomberg-this-weekend-07-04-2026-video",
+          "published": "Sat, 04 Jul 2026 18:50:38 GMT"
+        }
+      ],
+      "count": 10
+    }
+  }
+}
