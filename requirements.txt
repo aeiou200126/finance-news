@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+apscheduler
+requests
+feedparser
+beautifulsoup4
+lxml
+yfinance

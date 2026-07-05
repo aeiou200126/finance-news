@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>晨報｜每日金融市場摘要</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/3.4.1/tailwind.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #0E1420;
+    --panel:      #161D2C;
+    --panel-hi:   #1C2438;
+    --hairline:   #2A3348;
+    --text-hi:    #ECEEF3;
+    --text-mid:   #AEB6C7;
+    --text-low:   #6C7690;
+    --amber:      #C9A667;
+    --up:         #E5484D;   /* 台股慣例：上漲為紅 */
+    --down:       #2FAE6A;   /* 台股慣例：下跌為綠 */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--text-hi);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .font-display { font-family: 'Newsreader', serif; }
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+  .hairline { border-color: var(--hairline); }
+  .bg-panel { background: var(--panel); }
+  .bg-panel-hi { background: var(--panel-hi); }
+
+  /* ---- 跑馬燈（Ticker Tape）：站在整個設計的視覺焦點 ---- */
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 38s linear infinite;
+  }
+  .ticker-track:hover { animation-play-state: paused; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; }
+  }
+
+  .tab-btn { transition: color .15s ease, border-color .15s ease; }
+  .tab-btn[data-active="true"] {
+    color: var(--text-hi);
+    border-color: var(--amber);
+  }
+  .tab-btn[data-active="false"] {
+    color: var(--text-low);
+    border-color: transparent;
+  }
+
+  .news-row { transition: background-color .12s ease; }
+  .news-row:hover { background: var(--panel-hi); }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--panel) 25%, var(--panel-hi) 37%, var(--panel) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.4s ease infinite;
+  }
+  @keyframes skeleton-loading {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
+  ::-webkit-scrollbar { height: 6px; width: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 3px; }
+</style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ============ 跑馬燈：即時關鍵指數 ============ -->
+  <div class="border-b hairline bg-panel overflow-hidden py-2">
+    <div id="ticker" class="ticker-track font-mono text-sm">
+      <span class="px-6 text-sm text-[var(--text-low)]">正在載入市場數據…</span>
+    </div>
+  </div>
+
+  <!-- ============ Masthead ============ -->
+  <header class="max-w-6xl mx-auto px-6 pt-8 pb-6 border-b hairline">
+    <div class="flex items-end justify-between flex-wrap gap-4">
+      <div>
+        <p class="font-mono text-xs tracking-[0.25em] text-[var(--amber)] mb-2">DAILY MARKET BRIEF</p>
+        <h1 class="font-display italic text-4xl md:text-5xl leading-none">晨報</h1>
+        <p class="text-[var(--text-mid)] text-sm mt-2">每日金融市場資訊與新聞聚合</p>
+      </div>
+      <div class="text-right">
+        <p id="update-time" class="font-mono text-xs text-[var(--text-low)]">最後更新：—</p>
+        <button id="refresh-btn"
+          class="mt-2 font-mono text-xs border hairline px-3 py-1.5 rounded-sm text-[var(--text-mid)] hover:text-[var(--text-hi)] hover:border-[var(--amber)] transition-colors">
+          ↻ 立即更新
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- ============ 市場數據卡片 ============ -->
+    <section class="mb-12">
+      <h2 class="font-display italic text-xl text-[var(--text-mid)] mb-4">關鍵市場指數</h2>
+      <div id="market-groups" class="space-y-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="skeleton h-24 rounded-sm"></div>
+          <div class="skeleton h-24 rounded-sm"></div>
+          <div class="skeleton h-24 rounded-sm"></div>
+          <div class="skeleton h-24 rounded-sm"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 新聞分頁 ============ -->
+    <section>
+      <div class="flex items-center justify-between border-b hairline mb-4">
+        <div id="tabs" class="flex gap-6 font-display italic text-lg">
+          <!-- Tab 按鈕由 JS 動態產生 -->
+        </div>
+      </div>
+      <div id="news-list" class="divide-y hairline">
+        <div class="py-4"><div class="skeleton h-5 w-3/4 rounded-sm mb-2"></div><div class="skeleton h-3 w-1/4 rounded-sm"></div></div>
+        <div class="py-4"><div class="skeleton h-5 w-2/3 rounded-sm mb-2"></div><div class="skeleton h-3 w-1/4 rounded-sm"></div></div>
+        <div class="py-4"><div class="skeleton h-5 w-3/5 rounded-sm mb-2"></div><div class="skeleton h-3 w-1/4 rounded-sm"></div></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-6 py-8 border-t hairline text-center">
+    <p class="font-mono text-xs text-[var(--text-low)]">資料每日 08:00 自動更新 · 市場數據延遲約 15–20 分鐘</p>
+  </footer>
+
+<script>
+  const CATEGORY_LABELS = {
+    us_stock: "美股",
+    tw_stock: "台股",
+    bond: "美債",
+    fx: "匯率",
+  };
+
+  let newsData = {};
+  let activeTab = null;
+
+  // ---------------------------------------------------------
+  // 市場數據：渲染卡片 + 跑馬燈
+  // ---------------------------------------------------------
+  function renderMarket(items) {
+    // --- 依分類分組 ---
+    const grouped = {};
+    items.forEach((item) => {
+      if (!grouped[item.category]) grouped[item.category] = [];
+      grouped[item.category].push(item);
+    });
+
+    const container = document.getElementById("market-groups");
+    container.innerHTML = "";
+
+    Object.keys(CATEGORY_LABELS).forEach((catKey) => {
+      const list = grouped[catKey];
+      if (!list || list.length === 0) return;
+
+      const groupDiv = document.createElement("div");
+      groupDiv.innerHTML = `
+        <p class="font-mono text-xs text-[var(--text-low)] mb-2 tracking-wider">${CATEGORY_LABELS[catKey]}</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          ${list.map(renderMarketCard).join("")}
+        </div>
+      `;
+      container.appendChild(groupDiv);
+    });
+
+    // --- 跑馬燈（重複兩次資料，讓捲動可以無縫接軌）---
+    const tickerHtml = items
+      .filter((i) => i.status === "ok")
+      .map(renderTickerItem)
+      .join("");
+    document.getElementById("ticker").innerHTML = tickerHtml + tickerHtml;
+  }
+
+  function renderMarketCard(item) {
+    if (item.status !== "ok") {
+      return `
+        <div class="bg-panel border hairline rounded-sm p-4">
+          <p class="text-xs text-[var(--text-low)] mb-2">${item.display_name}</p>
+          <p class="text-sm text-[var(--text-low)]">資料暫時無法取得</p>
+        </div>`;
+    }
+    const isUp = item.change >= 0;
+    const color = isUp ? "var(--up)" : "var(--down)";
+    const arrow = isUp ? "▲" : "▼";
+    return `
+      <div class="bg-panel border hairline rounded-sm p-4">
+        <p class="text-xs text-[var(--text-low)] mb-2 truncate">${item.display_name}</p>
+        <p class="font-mono text-lg text-[var(--text-hi)]">${formatNumber(item.price)}</p>
+        <p class="font-mono text-xs mt-1" style="color:${color}">
+          ${arrow} ${Math.abs(item.change).toFixed(2)} (${item.change_percent.toFixed(2)}%)
+        </p>
+      </div>`;
+  }
+
+  function renderTickerItem(item) {
+    const isUp = item.change >= 0;
+    const color = isUp ? "var(--up)" : "var(--down)";
+    const arrow = isUp ? "▲" : "▼";
+    return `
+      <span class="px-6 whitespace-nowrap border-r hairline">
+        <span class="text-[var(--text-mid)]">${item.display_name}</span>
+        <span class="text-[var(--text-hi)] ml-2">${formatNumber(item.price)}</span>
+        <span class="ml-2" style="color:${color}">${arrow} ${item.change_percent.toFixed(2)}%</span>
+      </span>`;
+  }
+
+  function formatNumber(n) {
+    return Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // ---------------------------------------------------------
+  // 新聞：渲染分頁 + 列表
+  // ---------------------------------------------------------
+  function renderTabs(sources) {
+    const tabsDiv = document.getElementById("tabs");
+    const keys = Object.keys(sources);
+
+    if (!activeTab || !keys.includes(activeTab)) {
+      activeTab = keys[0];
+    }
+
+    tabsDiv.innerHTML = keys
+      .map((key) => `
+        <button
+          class="tab-btn pb-3 border-b-2"
+          data-active="${key === activeTab}"
+          onclick="switchTab('${key}')">
+          ${sources[key].name}
+        </button>
+      `)
+      .join("");
+
+    renderNewsList(sources[activeTab]?.news || []);
+  }
+
+  function switchTab(key) {
+    activeTab = key;
+    renderTabs(newsData);
+  }
+  window.switchTab = switchTab; // 讓 inline onclick 找得到這個函式
+
+  function renderNewsList(newsList) {
+    const listDiv = document.getElementById("news-list");
+
+    if (!newsList || newsList.length === 0) {
+      listDiv.innerHTML = `<p class="py-8 text-center text-[var(--text-low)] text-sm">目前沒有可顯示的新聞，稍後再回來看看。</p>`;
+      return;
+    }
+
+    listDiv.innerHTML = newsList
+      .map(
+        (item) => `
+        <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="news-row block py-4 px-2 -mx-2 rounded-sm">
+          <p class="text-[var(--text-hi)] leading-snug">${escapeHtml(item.title)}</p>
+          ${item.published ? `<p class="font-mono text-xs text-[var(--text-low)] mt-1">${item.published}</p>` : ""}
+        </a>`
+      )
+      .join("");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------------------------------------------------------
+  // 資料載入
+  // ---------------------------------------------------------
+  async function loadAll() {
+    try {
+      const [marketRes, newsRes] = await Promise.all([
+        fetch("/api/market"),
+        fetch("/api/news"),
+      ]);
+
+      if (!marketRes.ok || !newsRes.ok) throw new Error("API 回應異常");
+
+      const marketData = await marketRes.json();
+      newsData = await newsRes.json();
+
+      renderMarket(marketData);
+      renderTabs(newsData);
+
+      document.getElementById("update-time").textContent =
+        "最後更新：" + new Date().toLocaleString("zh-TW", { hour12: false });
+    } catch (err) {
+      console.error("載入資料失敗：", err);
+      document.getElementById("news-list").innerHTML =
+        `<p class="py-8 text-center text-[var(--down)] text-sm">資料載入失敗，請稍後重新整理頁面。</p>`;
+    }
+  }
+
+  document.getElementById("refresh-btn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.textContent = "更新中…";
+    try {
+      await fetch("/api/refresh", { method: "POST" });
+      await loadAll();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "↻ 立即更新";
+    }
+  });
+
+  loadAll();
+</script>
+</body>
+</html>

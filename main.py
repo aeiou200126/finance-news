@@ -1,96 +1,134 @@
 # -*- coding: utf-8 -*-
-import os
-import json
+"""
+main.py
+================
+每日金融市場資訊聚合網站 —— 後端主程式
+
+負責整合：
+    1. 排程（APScheduler）：每天早上 08:00 自動抓取新聞與市場數據
+    2. 資料庫（database.py）：把抓到的資料存起來
+    3. API（FastAPI）：提供 /api/news、/api/market 給前端讀取
+    4. 靜態網頁：提供 static/index.html 這個前端 Dashboard
+
+啟動方式：
+    uvicorn main:app --reload
+    然後瀏覽器打開 http://127.0.0.1:8000
+"""
+
 import logging
-import http.server
-import socketserver
-from concurrent.futures import ThreadPoolExecutor
-from google import genai
+from contextlib import asynccontextmanager
 
-from news_scraper import fetch_all_news, save_to_json as save_news
-from market_data import fetch_all_market_data, save_to_json as save_market
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from apscheduler.schedulers.background import BackgroundScheduler
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+import database
+from scraper.news_scraper import fetch_all_news
+from scraper.market_data import fetch_all_market_data
+
+# ---------------------------------------------------------------
+# 基本設定
+# ---------------------------------------------------------------
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 logger = logging.getLogger(__name__)
 
-PORT = 8000
+scheduler = BackgroundScheduler(timezone="Asia/Taipei")
 
-def generate_ai_summary():
-    """讀取抓好的新聞，並呼叫 Gemini 產生專屬早報。若失敗則自動啟用備用機制。"""
-    logger.info("開始處理 AI 摘要...")
-    
-    # 這是我們的「系統保險絲」，如果 AI 當機，網頁依然會顯示這段備用文字
-    fallback_html = """
-    <p>⚠️ <strong>系統提示：</strong>目前無法取得雲端 AI 伺服器連線。</p>
-    <p>請直接參考下方的「市場行情」與「焦點頭條」，尋找今日適合穩健收息與擴大現金流之標的。</p>
+
+def scrape_and_store():
     """
-    
-    summary_html = fallback_html
-    status = "error"
+    排程任務主體：抓新聞 + 抓市場數據，並各自寫入資料庫。
+
+    設計重點：
+        新聞抓取失敗與市場數據抓取失敗，用兩個獨立的 try/except 包起來，
+        確保「新聞抓失敗」不會連帶讓「市場數據」也抓不到，反之亦然。
+    """
+    logger.info("=== 排程任務開始：抓取新聞與市場數據 ===")
 
     try:
-        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-        if not api_key:
-            raise ValueError("未設定 GEMINI_API_KEY 金鑰")
-
-        with open("news_data.json", "r", encoding="utf-8") as f:
-            news_data = json.load(f)
-
-        news_titles = []
-        for source, data in news_data.get("sources", {}).items():
-            for item in data.get("news", []):
-                news_titles.append(f"- {item['title']}")
-        news_text = "\n".join(news_titles)
-
-        client = genai.Client(api_key=api_key)
-        prompt = f"""
-        你是一位資深的金融市場分析師。請根據以下今日最新的財經新聞標題，整理一份「3分鐘市場早報」。
-        請聚焦於：如何透過這些資訊協助客戶尋找「擴大現金流部位、穩健收息」的投資機會與避險方向。
-        請輸出一段 300 字以內的精華摘要，請直接使用 HTML 格式輸出（可包含 <h3>, <ul>, <li>, <strong> 等標籤，但不要包含 <html>, <body>，也不要輸出 Markdown 的 ```html 標記）。
-        今日新聞標題：\n{news_text}
-        """
-        
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt,
-        )
-        summary_html = response.text.replace("```html", "").replace("```", "").strip()
-        status = "ok"
-
+        news_result = fetch_all_news(max_items_per_source=15)
+        database.save_news(news_result["sources"])
     except Exception as e:
-        logger.error(f"❌ [AI 摘要] 處理失敗，自動切換至備用機制: {e}")
+        logger.error(f"新聞抓取排程執行失敗：{e}")
 
-    # 🛑 最重要的一步：無論上面成功還是失敗，這裡「絕對」會強制建立檔案！
     try:
-        with open("ai_summary.json", "w", encoding="utf-8") as f:
-            json.dump({"summary_html": summary_html, "status": status}, f, ensure_ascii=False, indent=2)
-        logger.info("✅ [AI 摘要] 檔案已成功建立 (ai_summary.json)")
-    except Exception as write_error:
-        logger.error(f"❌ 嚴重錯誤：無法寫入檔案: {write_error}")
+        market_result = fetch_all_market_data()
+        database.save_market_data(market_result["data"])
+    except Exception as e:
+        logger.error(f"市場數據抓取排程執行失敗：{e}")
 
-def update_data_job():
-    logger.info("========================================")
-    logger.info("🔄 開始執行資料抓取與 AI 分析任務...")
-    
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        future_news = executor.submit(fetch_all_news, max_items_per_source=10)
-        future_market = executor.submit(fetch_all_market_data)
+    logger.info("=== 排程任務結束 ===")
 
-        try:
-            save_news(future_news.result(), "news_data.json")
-            logger.info("✅ [新聞數據] 抓取完成")
-        except Exception as e:
-            logger.error(f"❌ [新聞數據] 失敗: {e}")
 
-        try:
-            save_market(future_market.result(), "market_data.json")
-            logger.info("✅ [市場行情] 抓取完成")
-        except Exception as e:
-            logger.error(f"❌ [市場行情] 失敗: {e}")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    FastAPI 的生命週期管理：伺服器啟動時執行一次，關閉時執行一次。
+    """
+    # --- 啟動時執行 ---
+    database.init_db()
 
-    generate_ai_summary()
-    logger.info("✨ 資料更新與任務執行完畢！")
-    logger.info("========================================")
+    # 設定每天早上 08:00 自動抓取一次
+    scheduler.add_job(
+        scrape_and_store,
+        trigger="cron",
+        hour=8,
+        minute=0,
+        id="daily_scrape",
+        replace_existing=True,
+    )
+    scheduler.start()
+    logger.info("排程已啟動：每日 08:00 自動抓取新聞與市場數據")
 
-if __name__ == "__main__":
-    update_data_job()
+    # 伺服器剛啟動時，資料庫可能是空的，先手動跑一次，
+    # 讓使用者一打開網頁就能馬上看到資料，不用乾等到隔天 08:00
+    logger.info("伺服器啟動，先執行一次初始抓取...")
+    scrape_and_store()
+
+    yield  # ---- 這裡是 FastAPI 運作期間 ----
+
+    # --- 關閉時執行 ---
+    scheduler.shutdown()
+    logger.info("排程已停止，伺服器關閉")
+
+
+app = FastAPI(title="每日金融市場資訊聚合網站", lifespan=lifespan)
+
+
+# ---------------------------------------------------------------
+# API 端點
+# ---------------------------------------------------------------
+
+@app.get("/api/news")
+def api_get_news():
+    """回傳目前資料庫中各來源最新的新聞清單。"""
+    return database.get_latest_news()
+
+
+@app.get("/api/market")
+def api_get_market():
+    """回傳目前資料庫中所有市場標的的最新數據。"""
+    return database.get_latest_market_data()
+
+
+@app.post("/api/refresh")
+def api_manual_refresh():
+    """
+    手動觸發一次抓取（不用等排程時間到）。
+    方便你在瀏覽器打開網頁後，想立即更新資料時使用。
+    """
+    scrape_and_store()
+    return {"status": "ok", "message": "已重新抓取最新資料"}
+
+
+# ---------------------------------------------------------------
+# 掛載前端靜態網頁
+# 注意：這一行要放在所有 /api/... 路由「之後」，
+#      否則 StaticFiles 會把 /api 這類路徑也攔截掉，導致 API 404
+# ---------------------------------------------------------------
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
