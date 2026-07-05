@@ -5,70 +5,159 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日金融市場資訊聚合</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; color: #333; line-height: 1.6; padding: 30px; }
         .container { max-width: 1000px; margin: auto; }
-        .box { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        .loading { text-align: center; color: #666; }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #003366; padding-bottom: 20px; }
+        .header h1 { color: #003366; margin: 0; font-size: 2.2rem; }
+        .box { background: white; padding: 25px; margin-bottom: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #666; }
+        #ai-summary-box { border-left-color: #993366; background-color: #fffaf0; }
+        #news-box { border-left-color: #006699; }
+        #market-box { border-left-color: #008080; }
+        h2 { color: #222; margin-top: 0; margin-bottom: 20px; font-size: 1.4rem; }
+        ul { padding-left: 20px; margin: 0; }
+        li { margin-bottom: 12px; font-size: 1.05rem; }
+        a { color: #0056b3; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; color: #003366; }
+        
+        /* 表格美化 */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #f1f3f5; color: #495057; font-weight: 600; }
+        tr:hover { background-color: #f8f9fa; }
+        .loading-text { color: #6c757d; font-style: italic; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📈 每日金融市場資訊聚合</h1>
+        <div class="header">
+            <h1>📈 每日金融市場資訊聚合</h1>
+        </div>
         
         <div id="ai-summary-box" class="box">
-            <h2>🤖 AI 財經早報</h2>
-            <div class="loading">正在分析今日市場數據，請稍候...</div>
-        </div>
-
-        <div id="news-box" class="box">
-            <h2>📰 今日財經焦點</h2>
-            <div class="loading">正在抓取新聞...</div>
+            <h2>🤖 AI 財經專屬早報</h2>
+            <div id="ai-content" class="loading-text">早報正在雲端生成或同步中，請稍候...</div>
         </div>
 
         <div id="market-box" class="box">
-            <h2>📊 市場行情</h2>
-            <div class="loading">正在讀取報價...</div>
+            <h2>📊 全球市場重要行情</h2>
+            <div id="market-content">
+                <div class="loading-text">正在讀取即時報價...</div>
+            </div>
+        </div>
+
+        <div id="news-box" class="box">
+            <h2>📰 今日財經焦點頭條</h2>
+            <div id="news-content" class="loading-text">正在抓取最新新聞...</div>
         </div>
     </div>
 
     <script>
-        // 設定路徑為 ./ 開頭，確保在 GitHub Pages 也能抓到檔案
-        function loadData(url, elementId) {
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) throw new Error("檔案不存在");
-                    return response.json();
-                })
-                .then(data => {
-                    const container = document.getElementById(elementId);
-                    if (elementId === 'ai-summary-box') {
-                        container.innerHTML = `<h2>🤖 AI 財經早報</h2><div>${data.summary_html}</div>`;
-                    } else if (elementId === 'news-box') {
-                        let html = '<h2>📰 今日財經焦點</h2><ul>';
-                        Object.values(data.sources).forEach(src => {
+        const repoName = '/finance-dashboard'; 
+
+        // 1. 讀取 AI 摘要
+        fetch(repoName + '/ai_summary.json')
+            .then(res => res.ok ? res.json() : { summary_html: "專屬早報正在準備中，請稍後重整網頁。" })
+            .then(data => {
+                document.getElementById("ai-content").innerHTML = data.summary_html;
+            })
+            .catch(() => {
+                document.getElementById("ai-content").innerHTML = "專屬早報正在進行首輪雲端同步，請稍後重新整理。";
+            });
+
+        // 2. 讀取新聞
+        fetch(repoName + '/news_data.json')
+            .then(res => res.json())
+            .then(data => {
+                let html = '<ul>';
+                if (data.sources) {
+                    Object.values(data.sources).forEach(src => {
+                        if (src.news) {
                             src.news.forEach(n => {
                                 html += `<li><a href="${n.link}" target="_blank">${n.title}</a></li>`;
                             });
-                        });
-                        container.innerHTML = html + '</ul>';
-                    } else if (elementId === 'market-box') {
-                        container.innerHTML = `<h2>📊 市場行情</h2><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                        }
+                    });
+                }
+                html += '</ul>';
+                document.getElementById("news-content").innerHTML = html;
+            })
+            .catch(() => {
+                document.getElementById("news-content").innerHTML = "無法載入今日新聞。";
+            });
+
+        // 3. 讀取市場行情 (超級防呆對齊版)
+        fetch(repoName + '/market_data.json')
+            .then(res => res.json())
+            .then(marketJson => {
+                let tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>標的名稱</th>
+                                <th>最新價格</th>
+                                <th>漲跌點數</th>
+                                <th>漲跌幅</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                // 自動偵測大盤資料到底躲在陣列的哪裡
+                let targetData = [];
+                if (Array.isArray(marketJson.data)) {
+                    targetData = marketJson.data;
+                } else if (Array.isArray(marketJson.market_data)) {
+                    targetData = marketJson.market_data;
+                } else if (marketJson.targets) {
+                    targetData = marketJson.targets;
+                } else if (typeof marketJson === 'object') {
+                    // 如果根本不是陣列，把物件裡的內容挖出來變成陣列
+                    targetData = Object.values(marketJson).filter(v => typeof v === 'object' && v !== null);
+                }
+                
+                if (targetData.length === 0) {
+                    document.getElementById("market-content").innerHTML = "<div class='loading-text'>找不到行情資料格式。</div>";
+                    return;
+                }
+
+                targetData.forEach(item => {
+                    // 檢查這筆資料有沒有包含合法的價格資訊，避免抓到 updated_at 這種時間欄位
+                    if (item.price === undefined && item.close === undefined && item.current === undefined) {
+                        return; 
                     }
-                })
-                .catch(error => {
-                    console.error("載入失敗:", error);
-                    document.getElementById(elementId).innerHTML = `<h2>錯誤</h2><p>無法載入 ${url}，請稍後再試。</p>`;
+
+                    // 開始抓取欄位
+                    const name = item.display_name || item.name || item.key || "未知標的";
+                    const price = item.price !== undefined && item.price !== null ? item.price : (item.close || "-");
+                    const changeVal = item.change !== undefined && item.change !== null ? item.change : "-";
+                    
+                    let changePct = "-";
+                    if (item.change_percent !== undefined && item.change_percent !== null) {
+                        changePct = item.change_percent;
+                    } else if (item.change_pct !== undefined && item.change_pct !== null) {
+                        changePct = item.change_pct;
+                    }
+                    if (changePct !== "-" && !String(changePct).includes("%")) {
+                        changePct = changePct + "%";
+                    }
+                    
+                    tableHtml += `
+                        <tr>
+                            <td><strong>${name}</strong></td>
+                            <td>${typeof price === 'number' ? price.toLocaleString() : price}</td>
+                            <td>${changeVal}</td>
+                            <td>${changePct}</td>
+                        </tr>
+                    `;
                 });
-        }
-
-        // 你的 GitHub 專案名稱是 finance-dashboard
-// 所以我們強制指定從 /finance-dashboard/ 資料夾內去抓檔案
-const repoName = '/finance-dashboard'; 
-
-loadData(repoName + '/ai_summary.json', 'ai-summary-box');
-loadData(repoName + '/news_data.json', 'news-box');
-loadData(repoName + '/market_data.json', 'market-box');
+                
+                tableHtml += '</tbody></table>';
+                document.getElementById("market-content").innerHTML = tableHtml;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("market-content").innerHTML = "<div class='loading-text'>行情資料解析失敗。</div>";
+            });
     </script>
 </body>
 </html>
