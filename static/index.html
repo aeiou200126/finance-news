@@ -2,23 +2,29 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#241811">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="晨報">
+<meta name="description" content="每日金融市場資訊與新聞聚合——美股、台股、美債、匯率與財經頭條一次掌握">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23241811'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23E0A458' font-family='Georgia,serif'%3E晨%3C/text%3E%3C/svg%3E">
 <title>晨報｜每日金融市場摘要</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/3.4.1/tailwind.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink:        #0E1420;
-    --panel:      #161D2C;
-    --panel-hi:   #1C2438;
-    --hairline:   #2A3348;
-    --text-hi:    #ECEEF3;
-    --text-mid:   #AEB6C7;
-    --text-low:   #6C7690;
-    --amber:      #C9A667;
-    --up:         #E5484D;   /* 台股慣例：上漲為紅 */
-    --down:       #2FAE6A;   /* 台股慣例：下跌為綠 */
+    --ink:        #241811;   /* 深咖啡棕，取代原本的深藍夜色 */
+    --panel:      #33241A;   /* 溫暖的深褐色面板 */
+    --panel-hi:   #3E2C20;
+    --hairline:   #59422F;
+    --text-hi:    #F5E8D8;   /* 暖米白，取代原本偏藍白 */
+    --text-mid:   #D3B79A;
+    --text-low:   #9C8168;
+    --amber:      #E0A458;   /* 琥珀金點綴色 */
+    --up:         #C2543B;   /* 台股慣例：上漲為紅（暖磚紅，融入整體色調）*/
+    --down:       #7C8A4E;   /* 台股慣例：下跌為綠（暖橄欖綠，融入整體色調）*/
   }
 
   * { box-sizing: border-box; }
@@ -38,6 +44,11 @@
   .bg-panel-hi { background: var(--panel-hi); }
 
   /* ---- 跑馬燈（Ticker Tape）：站在整個設計的視覺焦點 ---- */
+  .ticker-wrap {
+    position: relative;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  }
   .ticker-track {
     display: flex;
     width: max-content;
@@ -52,7 +63,15 @@
     .ticker-track { animation: none; }
   }
 
-  .tab-btn { transition: color .15s ease, border-color .15s ease; }
+  /* ---- 頂部固定：滾動時 masthead 與跑馬燈保持可見 ---- */
+  .sticky-top { position: sticky; top: 0; z-index: 20; }
+  .masthead-blur {
+    background: rgba(36, 24, 17, 0.90);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .tab-btn { transition: color .15s ease, border-color .15s ease; white-space: nowrap; }
   .tab-btn[data-active="true"] {
     color: var(--text-hi);
     border-color: var(--amber);
@@ -61,9 +80,39 @@
     color: var(--text-low);
     border-color: transparent;
   }
+  #tabs { overflow-x: auto; scrollbar-width: none; }
+  #tabs::-webkit-scrollbar { display: none; }
 
-  .news-row { transition: background-color .12s ease; }
-  .news-row:hover { background: var(--panel-hi); }
+  .news-row { transition: background-color .12s ease, transform .12s ease; }
+  .news-row:hover { background: var(--panel-hi); transform: translateX(2px); }
+
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    text-align: right;
+    font-weight: 400;
+    padding: 8px 4px;
+    color: var(--text-low);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .data-table th:first-child { text-align: left; }
+  .data-table td {
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--hairline);
+    text-align: right;
+  }
+  .data-table td:first-child { text-align: left; color: var(--text-hi); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr { transition: background-color .12s ease; }
+  .data-table tbody tr:hover { background: var(--panel-hi); }
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    background: var(--panel);
+    padding: 4px 14px;
+  }
 
   .skeleton {
     background: linear-gradient(90deg, var(--panel) 25%, var(--panel-hi) 37%, var(--panel) 63%);
@@ -75,56 +124,63 @@
     100% { background-position: 0 50%; }
   }
 
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fade-up .5s ease both; }
+
   ::-webkit-scrollbar { height: 6px; width: 6px; }
   ::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 3px; }
 </style>
 </head>
 <body class="min-h-screen">
 
-  <!-- ============ 跑馬燈：即時關鍵指數 ============ -->
-  <div class="border-b hairline bg-panel overflow-hidden py-2">
-    <div id="ticker" class="ticker-track font-mono text-sm">
-      <span class="px-6 text-sm text-[var(--text-low)]">正在載入市場數據…</span>
+  <div class="sticky-top masthead-blur">
+    <!-- ============ 跑馬燈：即時關鍵指數 ============ -->
+    <div class="ticker-wrap border-b hairline bg-panel overflow-hidden py-2">
+      <div id="ticker" class="ticker-track font-mono text-sm">
+        <span class="px-6 text-sm text-[var(--text-low)]">正在載入市場數據…</span>
+      </div>
     </div>
+
+    <!-- ============ Masthead ============ -->
+    <header class="max-w-6xl mx-auto px-5 md:px-6 pt-5 pb-4 border-b hairline">
+      <div class="flex items-end justify-between flex-wrap gap-3">
+        <div>
+          <p class="font-mono text-[10px] md:text-xs tracking-[0.25em] text-[var(--amber)] mb-1.5">DAILY MARKET BRIEF</p>
+          <h1 class="font-display italic text-3xl sm:text-4xl md:text-5xl leading-none">晨報</h1>
+        </div>
+        <div class="text-right">
+          <p id="update-time" class="font-mono text-[10px] md:text-xs text-[var(--text-low)]">最後更新：—</p>
+          <button id="refresh-btn"
+            class="mt-2 font-mono text-xs border hairline px-3 py-1.5 rounded-sm text-[var(--text-mid)] hover:text-[var(--text-hi)] hover:border-[var(--amber)] transition-colors active:scale-95">
+            ↻ 立即更新
+          </button>
+        </div>
+      </div>
+    </header>
   </div>
 
-  <!-- ============ Masthead ============ -->
-  <header class="max-w-6xl mx-auto px-6 pt-8 pb-6 border-b hairline">
-    <div class="flex items-end justify-between flex-wrap gap-4">
-      <div>
-        <p class="font-mono text-xs tracking-[0.25em] text-[var(--amber)] mb-2">DAILY MARKET BRIEF</p>
-        <h1 class="font-display italic text-4xl md:text-5xl leading-none">晨報</h1>
-        <p class="text-[var(--text-mid)] text-sm mt-2">每日金融市場資訊與新聞聚合</p>
-      </div>
-      <div class="text-right">
-        <p id="update-time" class="font-mono text-xs text-[var(--text-low)]">最後更新：—</p>
-        <button id="refresh-btn"
-          class="mt-2 font-mono text-xs border hairline px-3 py-1.5 rounded-sm text-[var(--text-mid)] hover:text-[var(--text-hi)] hover:border-[var(--amber)] transition-colors">
-          ↻ 立即更新
-        </button>
-      </div>
-    </div>
-  </header>
 
-  <main class="max-w-6xl mx-auto px-6 py-8">
+  <main class="max-w-6xl mx-auto px-5 md:px-6 py-8">
 
     <!-- ============ 市場數據卡片 ============ -->
-    <section class="mb-12">
-      <h2 class="font-display italic text-xl text-[var(--text-mid)] mb-4">關鍵市場指數</h2>
+    <section class="mb-10 md:mb-12 fade-up">
+      <h2 class="font-display italic text-lg md:text-xl text-[var(--text-mid)] mb-4">關鍵市場指數</h2>
       <div id="market-groups" class="space-y-6">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div class="skeleton h-24 rounded-sm"></div>
-          <div class="skeleton h-24 rounded-sm"></div>
-          <div class="skeleton h-24 rounded-sm"></div>
-          <div class="skeleton h-24 rounded-sm"></div>
+        <div class="table-wrap">
+          <div class="py-3"><div class="skeleton h-4 w-full rounded-sm"></div></div>
+          <div class="py-3"><div class="skeleton h-4 w-full rounded-sm"></div></div>
+          <div class="py-3"><div class="skeleton h-4 w-full rounded-sm"></div></div>
         </div>
       </div>
     </section>
 
     <!-- ============ 新聞分頁 ============ -->
-    <section>
+    <section class="fade-up" style="animation-delay:.08s">
       <div class="flex items-center justify-between border-b hairline mb-4">
-        <div id="tabs" class="flex gap-6 font-display italic text-lg">
+        <div id="tabs" class="flex gap-5 md:gap-6 font-display italic text-base md:text-lg">
           <!-- Tab 按鈕由 JS 動態產生 -->
         </div>
       </div>
@@ -137,8 +193,8 @@
 
   </main>
 
-  <footer class="max-w-6xl mx-auto px-6 py-8 border-t hairline text-center">
-    <p class="font-mono text-xs text-[var(--text-low)]">資料每日 08:00 自動更新 · 市場數據延遲約 15–20 分鐘</p>
+  <footer class="max-w-6xl mx-auto px-5 md:px-6 py-8 border-t hairline text-center">
+    <p class="font-mono text-[10px] md:text-xs text-[var(--text-low)]">資料每日 08:00 自動更新 · 市場數據延遲約 15–20 分鐘</p>
   </footer>
 
 <script>
@@ -172,9 +228,21 @@
 
       const groupDiv = document.createElement("div");
       groupDiv.innerHTML = `
-        <p class="font-mono text-xs text-[var(--text-low)] mb-2 tracking-wider">${CATEGORY_LABELS[catKey]}</p>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          ${list.map(renderMarketCard).join("")}
+        <p class="font-mono text-xs text-[var(--amber)] mb-2 tracking-wider">${CATEGORY_LABELS[catKey]}</p>
+        <div class="table-wrap">
+          <table class="data-table font-mono text-sm">
+            <thead>
+              <tr>
+                <th>名稱</th>
+                <th>最新價</th>
+                <th>漲跌</th>
+                <th>漲跌幅</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(renderMarketRow).join("")}
+            </tbody>
+          </table>
         </div>
       `;
       container.appendChild(groupDiv);
@@ -188,25 +256,24 @@
     document.getElementById("ticker").innerHTML = tickerHtml + tickerHtml;
   }
 
-  function renderMarketCard(item) {
+  function renderMarketRow(item) {
     if (item.status !== "ok") {
       return `
-        <div class="bg-panel border hairline rounded-sm p-4">
-          <p class="text-xs text-[var(--text-low)] mb-2">${item.display_name}</p>
-          <p class="text-sm text-[var(--text-low)]">資料暫時無法取得</p>
-        </div>`;
+        <tr>
+          <td class="font-sans">${item.display_name}</td>
+          <td colspan="3" class="text-[var(--text-low)] font-sans">資料暫時無法取得</td>
+        </tr>`;
     }
     const isUp = item.change >= 0;
     const color = isUp ? "var(--up)" : "var(--down)";
     const arrow = isUp ? "▲" : "▼";
     return `
-      <div class="bg-panel border hairline rounded-sm p-4">
-        <p class="text-xs text-[var(--text-low)] mb-2 truncate">${item.display_name}</p>
-        <p class="font-mono text-lg text-[var(--text-hi)]">${formatNumber(item.price)}</p>
-        <p class="font-mono text-xs mt-1" style="color:${color}">
-          ${arrow} ${Math.abs(item.change).toFixed(2)} (${item.change_percent.toFixed(2)}%)
-        </p>
-      </div>`;
+      <tr>
+        <td class="font-sans">${item.display_name}</td>
+        <td class="text-[var(--text-hi)]">${formatNumber(item.price)}</td>
+        <td style="color:${color}">${arrow} ${Math.abs(item.change).toFixed(2)}</td>
+        <td style="color:${color}">${item.change_percent.toFixed(2)}%</td>
+      </tr>`;
   }
 
   function renderTickerItem(item) {
